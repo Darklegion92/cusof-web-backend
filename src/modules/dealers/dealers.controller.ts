@@ -59,8 +59,8 @@ export class DealersController {
     return this.dealersService.update(id, updateDealerDto);
   }
 
-  @Patch(':id/folios')
-  @Roles(Role.ADMIN)
+  @Patch(':id/folios-add')
+  @Roles(Role.DEALER)
   @ApiOperation({ summary: 'Update dealer folios count' })
   @ApiResponse({ status: 200, description: 'The dealer folios count has been successfully updated.' })
   updateFolios(
@@ -70,7 +70,7 @@ export class DealersController {
     return this.dealersService.updateFoliosCount(id, foliosCount);
   }
 
-  @Patch(':id/clients')
+  @Patch(':id/clients-add')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update dealer clients count' })
   @ApiResponse({ status: 200, description: 'The dealer clients count has been successfully updated.' })

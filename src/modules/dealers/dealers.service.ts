@@ -85,7 +85,7 @@ export class DealersService {
 
   async updateFoliosCount(id: number, foliosCount: number) {
     const dealer = await this.findById(id);
-    dealer.foliosAcquired = foliosCount;
+    dealer.foliosAcquired += foliosCount;
     return this.dealerRepository.save(dealer);
   }
 
