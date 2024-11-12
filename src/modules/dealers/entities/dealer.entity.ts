@@ -22,6 +22,9 @@ export class Dealer {
   @Column({ default: 0, name: 'folios_acquired' })
   foliosAcquired: number;
 
+  @Column({ default: 0, name: 'used_folios' })
+  usedFolios: number;
+
   @Column({ default: 0, name: "customers_count" })
   customersCount: number;
 

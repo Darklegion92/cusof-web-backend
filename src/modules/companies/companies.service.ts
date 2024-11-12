@@ -37,7 +37,8 @@ export class CompaniesService {
       .leftJoinAndSelect('company.typeRegime', 'typeRegime')
       .leftJoinAndSelect('company.typeLiability', 'typeLiability')
       .leftJoinAndSelect('company.municipality', 'municipality')
-      .leftJoinAndSelect('company.dealer', 'dealer');
+      .leftJoinAndSelect('company.dealer', 'dealer')
+      .leftJoinAndSelect('company.typePlans', 'typePlans');
 
     if (dealerId) {
       queryBuilder.where('dealer.id = :dealerId', { dealerId });
@@ -55,6 +56,7 @@ export class CompaniesService {
       .leftJoinAndSelect('company.typeLiability', 'typeLiability')
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
+      .leftJoinAndSelect('company.typePlans', 'typePlans')
       .where('company.id = :id', { id });
 
     if (dealerId) {
@@ -98,7 +100,7 @@ export class CompaniesService {
   async addFolios(companyId: number, newFolios: number) {
     const company = await this.findOne(companyId);
 
-    const typePlans = await this.findOneTypePlan(company.typePlanId);
+    const typePlans = await this.findOneTypePlan(company.typePlans.id);
     await this.typePlansRepository.save({
       ...typePlans,
       qtyDocsInvoice: typePlans.qtyDocsInvoice + newFolios,

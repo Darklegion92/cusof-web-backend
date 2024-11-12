@@ -5,6 +5,7 @@ import { TypeOrganization } from '../../catalog/entities/type-organization.entit
 import { TypeRegime } from '../../catalog/entities/type-regime.entity';
 import { TypeLiability } from '../../catalog/entities/type-liability.entity';
 import { Municipality } from '../../catalog/entities/municipality.entity';
+import { TypePlans } from './type-plans.entity';
 
 @Entity('companies')
 export class Company {
@@ -79,9 +80,6 @@ export class Company {
   @Column()
   newpassword: string;
 
-  @Column({ name: 'type_plan_id' })
-  typePlanId: number;
-
   @Column({ name: 'type_plan2_id' })
   typePlan2Id: number;
 
@@ -93,18 +91,6 @@ export class Company {
 
   @Column({ name: 'absolut_plan_documents' })
   absolutPlanDocuments: number;
-
-  @Column({ name: 'start_plan_date' })
-  startPlanDate: Date;
-
-  @Column({ name: 'start_plan2_date' })
-  startPlan2Date: Date;
-
-  @Column({ name: 'start_plan3_date' })
-  startPlan3Date: Date;
-
-  @Column({ name: 'start_plan4_date' })
-  startPlan4Date: Date;
 
   @Column({ name: 'absolut_start_plan_date' })
   absolutStartPlanDate: Date;
@@ -124,5 +110,12 @@ export class Company {
   @ManyToOne(() => Dealer, dealer => dealer.companies)
   @JoinColumn({ name: 'dealer_id' })
   dealer: Dealer;
+
+  @ManyToOne(() => TypePlans, typePlans => typePlans.companies)
+  @JoinColumn({ name: 'type_plan_id' })
+  typePlans: TypePlans;
+
+  @Column()
+  consumption: number;
 }
 

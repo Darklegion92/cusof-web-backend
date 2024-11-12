@@ -41,7 +41,7 @@ export class DealersController {
   }
 
   @Get(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.DEALER)
   @ApiOperation({ summary: 'Get dealer by id' })
   @ApiResponse({ status: 200, description: 'Return dealer by id.' })
   findOne(@Param('id', ParseIntPipe) id: number) {
@@ -49,7 +49,7 @@ export class DealersController {
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN)
+  @Roles(Role.DEALER)
   @ApiOperation({ summary: 'Update dealer' })
   @ApiResponse({ status: 200, description: 'The dealer has been successfully updated.' })
   update(
