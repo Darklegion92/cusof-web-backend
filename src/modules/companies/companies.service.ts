@@ -16,6 +16,10 @@ export class CompaniesService {
   ) { }
 
   async create(dealerId: number, createCompanyDto: CreateCompanyDto) {
+    //TODO: para crear la compañia es necesario
+    //crear un usuario
+    //crear un plan
+    //para luego asignar estos datos a la compañía
     const company = this.companyRepository.create({
       ...createCompanyDto,
       dealer: { id: dealerId },
