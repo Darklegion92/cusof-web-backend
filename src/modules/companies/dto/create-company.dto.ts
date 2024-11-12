@@ -1,41 +1,59 @@
-import { IsString, IsNumber, IsNotEmpty, IsPhoneNumber } from 'class-validator';
+import { IsString, IsNumber, IsNotEmpty, IsEmail, MinLength, Length, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCompanyDto {
+
   @ApiProperty()
+  @IsString()
+  @MinLength(6)
+  @IsNotEmpty()
+  identificationNumber: string;
+
+  @ApiProperty()
+  @Length(1)
   @IsNumber()
   @IsNotEmpty()
-  type_document_identification_id: number;
+  dv: string;
 
   @ApiProperty()
   @IsNumber()
   @IsNotEmpty()
-  type_organization_id: number;
+  typeDocumentIdentificationId: number;
 
   @ApiProperty()
   @IsNumber()
   @IsNotEmpty()
-  type_regime_id: number;
+  typeOrganizationId: number;
 
   @ApiProperty()
   @IsNumber()
   @IsNotEmpty()
-  type_liability_id: number;
+  typeRegimeId: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  typePlanId: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  typeLiabilityId: number;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  business_name: string;
+  businessName: string;
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
-  merchant_registration: string;
+  @IsOptional()
+  merchantRegistration: string;
 
   @ApiProperty()
   @IsNumber()
   @IsNotEmpty()
-  municipality_id: number;
+  municipalityId: number;
 
   @ApiProperty()
   @IsString()
@@ -43,7 +61,27 @@ export class CreateCompanyDto {
   address: string;
 
   @ApiProperty()
-  @IsPhoneNumber()
+  @IsString()
   @IsNotEmpty()
   phone: string;
+
+  @ApiProperty()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty()
+  @IsEmail()
+  @IsOptional()
+  emailUsername: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  emailPassword: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  quantityFolios: number;
 }

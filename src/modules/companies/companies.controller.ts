@@ -56,7 +56,7 @@ export class CompaniesController {
     @Param('id', ParseIntPipe) id: number,
     @Body() updateCompanyDto: UpdateCompanyDto,
   ) {
-    return this.companiesService.update(id, req.user.id, updateCompanyDto);
+    return this.companiesService.update(id, updateCompanyDto, req.user.id);
   }
 
 

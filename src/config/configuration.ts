@@ -17,4 +17,10 @@ export default () => ({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // limit each IP to 100 requests per windowMs
   },
+  externalServices: {
+    apiKey: process.env.API_KEY,
+    externalURl: process.env.EXTERNAL_URL,
+    apiDianURl: process.env.API_DIAN_URL,
+
+  }
 });

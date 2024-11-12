@@ -100,4 +100,12 @@ export class DealersService {
     dealer.isActive = !dealer.isActive;
     return this.dealerRepository.save(dealer);
   }
+
+  async validateFolios(dealerId: number, quantity: number): Promise<boolean> {
+
+    const dealer = await this.findById(dealerId);
+
+    return (dealer.foliosAcquired - dealer.usedFolios) >= quantity
+
+  }
 }
