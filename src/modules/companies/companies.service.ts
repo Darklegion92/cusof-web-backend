@@ -124,14 +124,13 @@ export class CompaniesService {
       .leftJoinAndSelect('company.typeLiability', 'typeLiability')
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
-      .leftJoinAndSelect('company.typePlans', 'typePlans');
+      .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .where('type_plan_id <> 0');
 
     if (dealerId) {
-      queryBuilder.where('dealer.id = :dealerId', { dealerId });
+      queryBuilder.andWhere('dealer.id = :dealerId', { dealerId });
     }
     const companies = await queryBuilder.getMany();
-
-    //TODO: consultar las compañias en el otro servidor
 
     const companies2 = await this.getCompanies2(dealerId ?? 0);
 
@@ -148,7 +147,7 @@ export class CompaniesService {
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
-      .where('company.id = :id and type_plan <> 0', { id });
+      .where('company.id = :id', { id });
 
     if (dealerId) {
       queryBuilder.andWhere('dealer.id = :dealerId', { dealerId });
@@ -209,8 +208,24 @@ export class CompaniesService {
 
       companyReturn = this.findOne(companyId);
     } else {
-      //TODO: pendiente organizar actualización del otro server
-      companyReturn = null;
+      const url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies/${companyId}/${newFolios}`;
+      try {
+        const response = await firstValueFrom(
+          this.httpService.patch(url, {}, {
+            headers: {
+              'x-api-key': this.configService.get('externalServices.apiKey'),
+            },
+          }),
+        );
+
+
+        if (response.data) {
+          companyReturn = response.data;
+        }
+      } catch (error) {
+        return error;
+
+      }
     }
 
     const dealer = await this.dealersService.findById(dealerId);
