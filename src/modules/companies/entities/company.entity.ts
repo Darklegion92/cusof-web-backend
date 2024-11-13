@@ -117,5 +117,8 @@ export class Company {
 
   @Column()
   consumption: number;
+
+  @Column()
+  server: number;
 }
 
