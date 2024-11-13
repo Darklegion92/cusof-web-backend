@@ -60,13 +60,14 @@ export class CompaniesController {
   }
 
 
-  @Patch(':id/:folios')
+  @Patch(':id/:folios/:server')
   @ApiOperation({ summary: 'Add Folios Company' })
   @ApiResponse({ status: 200, description: 'Folios has been successfully add.' })
   addFolios(
     @Param('id', ParseIntPipe) id: number,
     @Param('folios', ParseIntPipe) folios: number,
+    @Param('server', ParseIntPipe) server: number,
   ) {
-    return this.companiesService.addFolios(id, folios);
+    return this.companiesService.addFolios(id, folios, server);
   }
 }

@@ -188,16 +188,23 @@ export class CompaniesService {
     return this.findOne(id, dealerId);
   }
 
-  async addFolios(companyId: number, newFolios: number) {
-    const company = await this.findOne(companyId);
+  async addFolios(companyId: number, newFolios: number, server: number) {
 
-    const typePlans = await this.findOneTypePlan(company.typePlans.id);
-    await this.typePlansRepository.save({
-      ...typePlans,
-      qtyDocsInvoice: typePlans.qtyDocsInvoice + newFolios,
-    });
+    if (server === 1) {
+      const company = await this.findOne(companyId);
 
-    return this.findOne(companyId);
+      const typePlans = await this.findOneTypePlan(company.typePlans.id);
+      await this.typePlansRepository.save({
+        ...typePlans,
+        qtyDocsInvoice: typePlans.qtyDocsInvoice + newFolios,
+      });
+
+      return this.findOne(companyId);
+    } else {
+      //TODO: pendiente organizar actualización del otro server
+    }
+
+
   }
 
 
