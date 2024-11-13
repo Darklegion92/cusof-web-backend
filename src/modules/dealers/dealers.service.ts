@@ -55,7 +55,7 @@ export class DealersService {
   async findByEmail(email: string) {
     return this.dealerRepository.findOne({
       where: { email },
-      select: ['id', 'name', 'email', 'password', 'phone', 'foliosAcquired', 'customersCount', 'isActive', 'role', 'refreshToken'],
+      select: ['id', 'name', 'email', 'password', 'phone', 'foliosAcquired', 'customersCount', 'isActive', 'role', 'refreshToken', 'customersCount', 'usedFolios'],
     });
   }
 
