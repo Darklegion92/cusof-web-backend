@@ -67,7 +67,8 @@ export class CompaniesController {
     @Param('id', ParseIntPipe) id: number,
     @Param('folios', ParseIntPipe) folios: number,
     @Param('server', ParseIntPipe) server: number,
+    @Request() req: { user: { id: number, role: Role } },
   ) {
-    return this.companiesService.addFolios(id, folios, server);
+    return this.companiesService.addFolios(id, folios, server, req.user.id);
   }
 }

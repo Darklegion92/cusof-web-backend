@@ -188,7 +188,15 @@ export class CompaniesService {
     return this.findOne(id, dealerId);
   }
 
-  async addFolios(companyId: number, newFolios: number, server: number) {
+  async addFolios(companyId: number, newFolios: number, server: number, dealerId: number) {
+
+    const validateFolios = await this.dealersService.validateFolios(dealerId, newFolios);
+
+    if (!validateFolios) {
+      throw new BadRequestException("El distribuidor no tiene suficientes folios")
+    }
+
+    let companyReturn;
 
     if (server === 1) {
       const company = await this.findOne(companyId);
@@ -199,11 +207,19 @@ export class CompaniesService {
         qtyDocsInvoice: typePlans.qtyDocsInvoice + newFolios,
       });
 
-      return this.findOne(companyId);
+      companyReturn = this.findOne(companyId);
     } else {
       //TODO: pendiente organizar actualización del otro server
+      companyReturn = null;
     }
 
+    const dealer = await this.dealersService.findById(dealerId);
+
+    await this.dealersService.update(dealerId, {
+      usedFolios: dealer.usedFolios + newFolios
+    });
+
+    return companyReturn;
 
   }
 
