@@ -25,49 +25,69 @@ export class CompaniesService {
 
   async create(dealerId: number, { quantityFolios, typeRegimeId, address, businessName, dv, email, emailPassword, emailUsername, identificationNumber, merchantRegistration, municipalityId, phone, typeDocumentIdentificationId, typeLiabilityId, typeOrganizationId, }: CreateCompanyDto) {
 
+
+    const company = await this.companyRepository.findOne({
+      where: {
+        identificationNumber
+      }
+    })
+
+    if (company) {
+      throw new BadRequestException(`Cliente con documento ${identificationNumber} ya existe`)
+    }
+
     const validateFolios = await this.dealersService.validateFolios(dealerId, quantityFolios)
 
     if (!validateFolios) {
       throw new BadRequestException('Los folios son insuficientes para asignar al cliente')
     }
 
-    const response = await firstValueFrom(
-      this.httpService.get<ResponseCreateCompanyApidian>(`${this.configService.get('externalServices.apiDianURl') ?? ''}/${identificationNumber}/${dv} `, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        Body: {
-          "type_document_identification_id": typeDocumentIdentificationId,
-          "type_organization_id": typeOrganizationId,
-          "type_regime_id": typeRegimeId,
-          "type_liability_id": typeLiabilityId,
-          "business_name": businessName,
-          "merchant_registration": merchantRegistration,
-          "municipality_id": municipalityId,
-          "address": address,
-          "phone": phone,
-          "email": email,
-          "mail_host": "smtp.gmail.com",
-          "mail_port": "587",
-          "mail_username": emailUsername,
-          "mail_password": emailPassword,
-          "mail_encryption": "tls"
-        }
-      }),
-    );
+    const url = `${this.configService.get('externalServices.apiDianURl') ?? ''}/config/${identificationNumber}/${dv} `;
 
-    if (response.success === 'true') {
-      const lastTypePlans = await this.typePlansRepository.findOne({
-        order: {
-          id: 1
-        }
+    let response;
+    try {
+      response = await firstValueFrom(
+        this.httpService.post<ResponseCreateCompanyApidian>(
+          url,
+          {
+            "type_document_identification_id": typeDocumentIdentificationId,
+            "type_organization_id": typeOrganizationId,
+            "type_regime_id": typeRegimeId,
+            "type_liability_id": typeLiabilityId,
+            "business_name": businessName,
+            "merchant_registration": merchantRegistration,
+            "municipality_id": municipalityId,
+            "address": address,
+            "phone": phone,
+            "email": email,
+            "mail_host": emailUsername ? "smtp.gmail.com" : null,
+            "mail_port": emailUsername ? "587" : null,
+            "mail_username": emailUsername,
+            "mail_password": emailPassword,
+            "mail_encryption": emailUsername ? "tls" : null
+
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          }),
+      );
+    } catch (error) {
+      return error;
+    }
+
+    if (response.data.success) {
+      const lastTypePlans = await this.typePlansRepository.find({
+        order: { id: 'DESC' },
+        take: 1
       })
 
       const typePlans = this.typePlansRepository.create({
         name: identificationNumber,
         qtyDocsInvoice: quantityFolios,
-        id: (lastTypePlans?.id ?? 0) + 1,
+        id: (lastTypePlans[0]?.id ?? 0) + 1,
         qtyDocsPayroll: 0,
         qtyDocsRadian: 0,
         qtyDocsDs: 0,
@@ -76,10 +96,17 @@ export class CompaniesService {
       });
 
 
-      const company = await this.findOne(response.company.id);
-      const delaer = await this.dealersService.findById(dealerId);
+      await this.typePlansRepository.save(typePlans);
+
+
+      const company = await this.findOne(response.data.company.id);
+      const dealer = await this.dealersService.findById(dealerId);
       company.typePlans = typePlans;
-      company.dealer = delaer;
+      company.dealer = dealer;
+
+      await this.dealersService.update(dealer.id, {
+        usedFolios: dealer.usedFolios + quantityFolios
+      });
 
       return this.companyRepository.save(company);
     } else {

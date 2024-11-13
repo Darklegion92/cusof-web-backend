@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { HttpModule } from '@nestjs/axios';
 
 import configuration from './config/configuration';
 import { getDatabaseConfig } from './config/database.config';
@@ -25,7 +24,6 @@ import { CatalogModule } from './modules/catalog/catalog.module';
         DealersModule,
         CompaniesModule,
         CatalogModule,
-        HttpModule
     ],
 })
 export class AppModule { }

@@ -4,10 +4,15 @@ import { CompaniesService } from './companies.service';
 import { CompaniesController } from './companies.controller';
 import { Company } from './entities/company.entity';
 import { TypePlans } from './entities/type-plans.entity';
+import { DealersModule } from '../dealers/dealers.module';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Company, TypePlans]),
+    DealersModule,
+    HttpModule
+
   ],
   controllers: [CompaniesController],
   providers: [CompaniesService],

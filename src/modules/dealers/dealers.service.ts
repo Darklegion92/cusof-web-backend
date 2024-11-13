@@ -42,7 +42,7 @@ export class DealersService {
   async findById(id: number) {
     const dealer = await this.dealerRepository.findOne({
       where: { id },
-      select: ['id', 'name', 'email', 'phone', 'foliosAcquired', 'customersCount', 'isActive', 'role', 'createdAt', 'updatedAt', 'refreshToken'],
+      select: ['id', 'name', 'email', 'phone', 'foliosAcquired', 'customersCount', 'isActive', 'role', 'createdAt', 'updatedAt', 'refreshToken', 'usedFolios'],
     });
 
     if (!dealer) {
