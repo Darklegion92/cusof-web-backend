@@ -6,10 +6,11 @@ import { Company } from './entities/company.entity';
 import { TypePlans } from './entities/type-plans.entity';
 import { DealersModule } from '../dealers/dealers.module';
 import { HttpModule } from '@nestjs/axios';
+import { User } from './entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Company, TypePlans]),
+    TypeOrmModule.forFeature([Company, TypePlans, User]),
     DealersModule,
     HttpModule
 

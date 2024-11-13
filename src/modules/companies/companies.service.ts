@@ -125,6 +125,7 @@ export class CompaniesService {
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .leftJoinAndSelect('company.user', 'user')
       .where('type_plan_id <> 0');
 
     if (dealerId) {
