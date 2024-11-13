@@ -129,8 +129,13 @@ export class CompaniesService {
     if (dealerId) {
       queryBuilder.where('dealer.id = :dealerId', { dealerId });
     }
+    const companies = await queryBuilder.getMany();
 
-    return queryBuilder.getMany();
+    //TODO: consultar las compañias en el otro servidor
+
+    const companies2 = await this.getCompanies2(dealerId ?? 0);
+
+    return [...companies, ...companies2];
   }
 
   async findOne(id: number, dealerId?: number) {
@@ -143,7 +148,7 @@ export class CompaniesService {
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
-      .where('company.id = :id', { id });
+      .where('company.id = :id and type_plan <> 0', { id });
 
     if (dealerId) {
       queryBuilder.andWhere('dealer.id = :dealerId', { dealerId });
@@ -209,5 +214,24 @@ export class CompaniesService {
     }
 
     return typePlans;
+  }
+
+  private async getCompanies2(dealerId: number) {
+
+    const url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies/${dealerId}`;
+
+    const response = await firstValueFrom(
+      this.httpService.get(url, {
+        headers: {
+          'x-api-key': this.configService.get('externalServices.apiKey'),
+        },
+      }),
+    );
+
+    if (response.data) {
+      return response.data;
+    }
+
+    return []
   }
 }
