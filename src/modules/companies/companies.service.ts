@@ -75,7 +75,7 @@ export class CompaniesService {
           }),
       );
     } catch (error) {
-      console.log(error.response.data);
+      console.log(error);
 
       throw new BadRequestException(error.response.data.errors);
     }
