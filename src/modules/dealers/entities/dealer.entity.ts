@@ -1,5 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { Company } from '../../companies/entities/company.entity';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Role } from '../../../core/constants/roles.enum';
 
 @Entity('dealers')
@@ -42,7 +41,4 @@ export class Dealer {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-
-  @OneToMany(() => Company, company => company.dealer)
-  companies: Company[];
 }

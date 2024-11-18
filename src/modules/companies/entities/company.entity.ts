@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Dealer } from '../../dealers/entities/dealer.entity';
 import { TypeDocumentIdentification } from '../../catalog/entities/type-document-identification.entity';
 import { TypeOrganization } from '../../catalog/entities/type-organization.entity';
 import { TypeRegime } from '../../catalog/entities/type-regime.entity';
@@ -105,9 +104,8 @@ export class Company {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @ManyToOne(() => Dealer, dealer => dealer.companies)
-  @JoinColumn({ name: 'dealer_id' })
-  dealer: Dealer;
+  @Column({ name: 'dealer_id' })
+  dealerId: number;
 
   @ManyToOne(() => TypePlans, typePlans => typePlans.companies)
   @JoinColumn({ name: 'type_plan_id' })

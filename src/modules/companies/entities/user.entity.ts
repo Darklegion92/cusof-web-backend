@@ -16,7 +16,7 @@ export class User {
     @Column({ name: 'api_token' })
     apiToken: string;
 
-    @OneToMany(() => Company, company => company.dealer)
+    @OneToMany(() => Company, company => company.user)
     companies: Company[];
 }
 
