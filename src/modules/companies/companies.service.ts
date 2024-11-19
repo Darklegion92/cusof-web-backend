@@ -166,12 +166,12 @@ export class CompaniesService {
     return company;
   }
 
-  async update(id: number, { cusoftSerial: serialCusoft, ...updateCompanyDto }: UpdateCompanyDto, dealerId?: number) {
-    const company = await this.findOne(id, dealerId);
+  async update(id: number, { cusoftSerial, ...updateCompanyDto }: UpdateCompanyDto, idServer: number, dealerId?: number) {
+    const company = idServer === 1 ? await this.findOne(id, dealerId) : await this.getCompany2(id);
 
-    if (serialCusoft) {
+    if (cusoftSerial) {
 
-      const cusoftSerials = serialCusoft.split(',');
+      const cusoftSerials = cusoftSerial.split(',');
 
       if (cusoftSerials.length > company.quantityShops) {
         throw new BadRequestException(`La cantidad de sucurasles no puede superar ${company.quantityShops}`)
@@ -190,14 +190,21 @@ export class CompaniesService {
         { id: updateCompanyDto.typeLiabilityId } : undefined,
       municipality: updateCompanyDto.municipalityId ?
         { id: updateCompanyDto.municipalityId } : undefined,
+      cusoftSerial
     };
 
-    await this.companyRepository.save({
-      ...company,
-      ...updatedCompany,
-    });
+    if (idServer === 1) {
+      await this.companyRepository.save({
+        ...company,
+        ...updatedCompany,
+      });
+      return this.findOne(id, dealerId)
+    } else {
+      await this.update2(id, { cusoftSerial, ...updateCompanyDto });
+      return this.getCompany2(id);
+    }
 
-    return this.findOne(id, dealerId);
+
   }
 
   async addFolios(companyId: number, newFolios: number, server: number, dealerId: number) {
@@ -252,7 +259,6 @@ export class CompaniesService {
 
   }
 
-
   private async findOneTypePlan(id: number) {
 
     const queryBuilder = this.typePlansRepository
@@ -285,6 +291,47 @@ export class CompaniesService {
     }
 
     return []
+  }
+
+  private async getCompany2(companyId: number) {
+
+    const url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies/${companyId}`;
+
+    const response = await firstValueFrom(
+      this.httpService.get(url, {
+        headers: {
+          'x-api-key': this.configService.get('externalServices.apiKey'),
+        },
+      }),
+    );
+
+    if (response.data) {
+      return response.data;
+    }
+
+    return null
+  }
+
+  private async update2(id: number, updateCompanyDto: UpdateCompanyDto) {
+
+    const url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies/${id}`;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.patch(url, updateCompanyDto, {
+          headers: {
+            'x-api-key': this.configService.get('externalServices.apiKey'),
+          },
+        }),
+      );
+
+
+      if (response.data) {
+        return response.data;
+      }
+    } catch (error) {
+      return error;
+
+    }
   }
 
   async validateSerial(id: number, cusoftSerial: string) {

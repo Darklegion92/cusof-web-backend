@@ -52,7 +52,7 @@ export class CompaniesController {
     return this.companiesService.findOne(id, dealerId);
   }
 
-  @Patch(':id')
+  @Patch(':server/:id')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Update company' })
@@ -60,9 +60,10 @@ export class CompaniesController {
   update(
     @Request() req: { user: { id: number, role: Role } },
     @Param('id', ParseIntPipe) id: number,
+    @Param('server', ParseIntPipe) idServer: number,
     @Body() updateCompanyDto: UpdateCompanyDto,
   ) {
-    return this.companiesService.update(id, updateCompanyDto, req.user.id);
+    return this.companiesService.update(id, updateCompanyDto, idServer, req.user.id);
   }
 
 
