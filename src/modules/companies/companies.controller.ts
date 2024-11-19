@@ -18,13 +18,13 @@ import { RolesGuard } from '../../core/guards/roles.guard';
 import { Role } from '../../core/constants/roles.enum';
 
 @ApiTags('companies')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) { }
 
   @Post()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Create company' })
   @ApiResponse({ status: 201, description: 'The company has been successfully created.' })
   create(@Request() req: { user: { id: number, role: Role } }, @Body() createCompanyDto: CreateCompanyDto) {
@@ -32,6 +32,8 @@ export class CompaniesController {
   }
 
   @Get()
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get all companies' })
   @ApiResponse({ status: 200, description: 'Return all companies.' })
   findAll(@Request() req: { user: { id: number, role: Role } }) {
@@ -41,6 +43,8 @@ export class CompaniesController {
   }
 
   @Get(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Get company by id' })
   @ApiResponse({ status: 200, description: 'Return company by id.' })
   findOne(@Request() req: { user: { id: number, role: Role } }, @Param('id', ParseIntPipe) id: number) {
@@ -49,6 +53,8 @@ export class CompaniesController {
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Update company' })
   @ApiResponse({ status: 200, description: 'The company has been successfully updated.' })
   update(
@@ -61,6 +67,8 @@ export class CompaniesController {
 
 
   @Patch(':id/:folios/:server')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiOperation({ summary: 'Add Folios Company' })
   @ApiResponse({ status: 200, description: 'Folios has been successfully add.' })
   addFolios(
@@ -70,5 +78,15 @@ export class CompaniesController {
     @Request() req: { user: { id: number, role: Role } },
   ) {
     return this.companiesService.addFolios(id, folios, server, req.user.id);
+  }
+
+  @Get('validate-serial/:id/:serial')
+  @ApiOperation({ summary: 'Validate cusoftSerial' })
+  @ApiResponse({ status: 200, description: 'Folios has been successfully add.' })
+  validateSerialCusoft(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('serial') cusoftSerial: string,
+  ) {
+    return this.companiesService.validateSerial(id, cusoftSerial);
   }
 }

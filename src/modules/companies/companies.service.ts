@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import dayjs from 'dayjs';
 import { Company } from './entities/company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -165,14 +166,14 @@ export class CompaniesService {
     return company;
   }
 
-  async update(id: number, { serialCusoft, ...updateCompanyDto }: UpdateCompanyDto, dealerId?: number) {
+  async update(id: number, { cusoftSerial: serialCusoft, ...updateCompanyDto }: UpdateCompanyDto, dealerId?: number) {
     const company = await this.findOne(id, dealerId);
 
     if (serialCusoft) {
 
-      const serialsCusoft = serialCusoft.split(',');
+      const cusoftSerials = serialCusoft.split(',');
 
-      if (serialsCusoft.length > company.quantityShops) {
+      if (cusoftSerials.length > company.quantityShops) {
         throw new BadRequestException(`La cantidad de sucurasles no puede superar ${company.quantityShops}`)
       }
     }
@@ -284,5 +285,26 @@ export class CompaniesService {
     }
 
     return []
+  }
+
+  async validateSerial(id: number, cusoftSerial: string) {
+
+    const company = await this.findOne(id);
+    const cusoftSerials = company.cusoftSerial.split(',');
+
+    const serialFind = cusoftSerials.find((serial) => serial === cusoftSerial);
+
+    if (!serialFind) {
+      return new UnauthorizedException('Serial no registado o incorrecto')
+    }
+
+    const dateSerial = dayjs(serialFind.split('-')[0]);
+
+    if (dateSerial.isAfter(dayjs())) {
+      return new UnauthorizedException('Fecha caducada para el serial')
+
+    }
+
+    return company;
   }
 }
