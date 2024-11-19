@@ -122,5 +122,11 @@ export class Company {
 
   @Column()
   server: number;
+
+  @Column({ name: 'serial_cusoft' })
+  serialCusoft: string;
+
+  @Column({ name: 'quantity_shops', default: 1 })
+  quantityShops: number;
 }
 

@@ -165,8 +165,17 @@ export class CompaniesService {
     return company;
   }
 
-  async update(id: number, updateCompanyDto: UpdateCompanyDto, dealerId?: number) {
+  async update(id: number, { serialCusoft, ...updateCompanyDto }: UpdateCompanyDto, dealerId?: number) {
     const company = await this.findOne(id, dealerId);
+
+    if (serialCusoft) {
+
+      const serialsCusoft = serialCusoft.split(',');
+
+      if (serialsCusoft.length > company.quantityShops) {
+        throw new BadRequestException(`La cantidad de sucurasles no puede superar ${company.quantityShops}`)
+      }
+    }
 
     const updatedCompany = {
       ...updateCompanyDto,
