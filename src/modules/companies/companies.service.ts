@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import dayjs from 'dayjs';
+import * as dayjs from 'dayjs';
 import { Company } from './entities/company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -345,7 +345,7 @@ export class CompaniesService {
       return new UnauthorizedException('Serial no registado o incorrecto')
     }
 
-    const dateSerial = dayjs(serialFind.split('-')[0]);
+    const dateSerial = dayjs(serialFind.split('-')[1]);
 
     if (dateSerial.isAfter(dayjs())) {
       return new UnauthorizedException('Fecha caducada para el serial')
