@@ -342,13 +342,13 @@ export class CompaniesService {
     const serialFind = cusoftSerials.find((serial) => serial === cusoftSerial);
 
     if (!serialFind) {
-      return new UnauthorizedException('Serial no registado o incorrecto')
+      throw new UnauthorizedException('Serial no registado o incorrecto')
     }
 
     const dateSerial = dayjs(serialFind.split('-')[1]);
 
     if (dateSerial.isAfter(dayjs())) {
-      return new UnauthorizedException('Fecha caducada para el serial')
+      throw new UnauthorizedException('Fecha caducada para el serial')
 
     }
 
