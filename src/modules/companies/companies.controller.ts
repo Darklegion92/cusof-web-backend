@@ -81,13 +81,13 @@ export class CompaniesController {
     return this.companiesService.addFolios(id, folios, server, req.user.id);
   }
 
-  @Get('validate-serial/:id/:serial')
+  @Get('validate-serial/:document/:serial')
   @ApiOperation({ summary: 'Validate cusoftSerial' })
   @ApiResponse({ status: 200, description: 'Folios has been successfully add.' })
   validateSerialCusoft(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('document', ParseIntPipe) document: string,
     @Param('serial') cusoftSerial: string,
   ) {
-    return this.companiesService.validateSerial(id, cusoftSerial);
+    return this.companiesService.validateSerial(document, cusoftSerial);
   }
 }

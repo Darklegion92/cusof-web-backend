@@ -166,6 +166,27 @@ export class CompaniesService {
     return company;
   }
 
+  async findDocument(document: string) {
+    const queryBuilder = this.companyRepository
+      .createQueryBuilder('company')
+      .leftJoinAndSelect('company.typeDocumentIdentification', 'typeDocumentIdentification')
+      .leftJoinAndSelect('company.typeOrganization', 'typeOrganization')
+      .leftJoinAndSelect('company.typeRegime', 'typeRegime')
+      .leftJoinAndSelect('company.typeLiability', 'typeLiability')
+      .leftJoinAndSelect('company.municipality', 'municipality')
+      .leftJoinAndSelect('company.dealer', 'dealer')
+      .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .where('company.document = :document', { document });
+
+    const company = await queryBuilder.getOne();
+
+    if (!company) {
+      throw new NotFoundException(`Company with ID ${document} not found`);
+    }
+
+    return company;
+  }
+
   async update(id: number, { cusoftSerial, ...updateCompanyDto }: UpdateCompanyDto, idServer: number, dealerId?: number) {
     const company = idServer === 1 ? await this.findOne(id, dealerId) : await this.getCompany2(id);
 
@@ -293,9 +314,12 @@ export class CompaniesService {
     return []
   }
 
-  private async getCompany2(companyId: number) {
+  private async getCompany2(companyId?: number) {
 
-    const url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies/${companyId}`;
+    let url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies`;
+    if (companyId) {
+      url += `/${companyId}`
+    }
 
     const response = await firstValueFrom(
       this.httpService.get(url, {
@@ -334,9 +358,21 @@ export class CompaniesService {
     }
   }
 
-  async validateSerial(id: number, cusoftSerial: string) {
+  async validateSerial(document: string, cusoftSerial: string) {
 
-    const company = await this.findOne(id);
+    let company: Company | undefined = await this.findDocument(document);
+
+    if (!company) {
+      const companies: Company[] = await this.getCompany2();
+
+      company = companies.find(c => c.identificationNumber === document);
+
+      if (!company) {
+        throw new BadRequestException('Compañia no existe')
+      }
+    }
+
+
     const cusoftSerials = company.cusoftSerial.split(',');
 
     const serialFind = cusoftSerials.find((serial) => serial === cusoftSerial);
