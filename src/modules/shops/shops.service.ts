@@ -33,14 +33,14 @@ export class ShopsService {
     if (server === 2) {
       const shops = await this.getShop2();
 
-      shop = shops.findOne((s: Shop) => s.name === name && s.company.id === companyId);
+      shop = shops?.find(s => s.name === name && s.company.id === companyId) ?? null;
     }
 
     if (shop) {
       throw new BadRequestException(`Tienda con nombre ${name} ya existe para esta compañia`)
     }
 
-    const url = `${this.configService.get('externalServices.v') ?? ''}/shops `;
+    const url = `${this.configService.get('externalServices.v') ?? ''}/shops`;
 
     if (server === 2) {
       try {
@@ -121,7 +121,7 @@ export class ShopsService {
     return shop;
   }
 
-  private async getShop2(shopId?: number) {
+  private async getShop2(shopId?: number): Promise<Shop[] | null> {
 
     let url = `${this.configService.get('externalServices.externalURl') ?? ''}/shops`;
     if (shopId) {
