@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
@@ -20,7 +20,6 @@ export class ShopsService {
 
   private async create(server: number, { name, companyId, cusoftSerial }: CreateShopDto) {
 
-
     let shop = await this.shopRepository.findOne({
       where: {
         name,
@@ -37,28 +36,29 @@ export class ShopsService {
     }
 
     if (shop) {
-      throw new BadRequestException(`Tienda con nombre ${name} ya existe para esta compañia`)
+      return new BadRequestException(`Tienda con nombre ${name} ya existe para esta compañia`)
     }
 
-    const url = `${this.configService.get('externalServices.v') ?? ''}/shops`;
 
     if (server === 2) {
       try {
+        const url = `${this.configService.get('externalServices.externalURl') ?? ''}/shops`;
         const response = await firstValueFrom(
           this.httpService.post<Shop>(
             url,
-            CreateShopDto,
+            { name, companyId, cusoftSerial },
             {
               headers: {
                 'x-api-key': this.configService.get('externalServices.apiKey'),
               },
             }),
         );
+
         return response.data as Shop;
       } catch (error) {
-        console.log(error);
+        console.log({ error });
 
-        throw new BadRequestException(error.response.data.errors);
+        return new BadRequestException(error);
       }
     }
 
@@ -75,16 +75,20 @@ export class ShopsService {
   }
 
   async update(id: number, updateShopDto: UpdateShopDto, idServer: number) {
-    const shop = idServer === 1 ? await this.findOne(id) : await this.getShop2(id);
+    let shop = await this.findOne(id);
+
+    if (idServer === 2) {
+      const shops = await this.getShop2(id) ?? [];
+      shop = shops[0]
+    }
 
     if (shop) {
-      const updatedCompany = {
-        ...updateShopDto,
-        company: updateShopDto.companyId ?
-          { id: updateShopDto.companyId } : undefined,
-      };
-
       if (idServer === 1) {
+        const updatedCompany = {
+          ...updateShopDto,
+          company: updateShopDto.companyId ?
+            { id: updateShopDto.companyId } : undefined,
+        };
         await this.shopRepository.save({
           ...shop,
           ...updatedCompany,
@@ -92,11 +96,12 @@ export class ShopsService {
         return this.findOne(id)
       } else {
         await this.update2(id, updateShopDto);
-        return this.getShop2(id);
+        const shops = await this.getShop2(id) as Shop[];
+        return shops[0];
       }
 
     } else {
-      this.create(idServer, {
+      return this.create(idServer, {
         companyId: updateShopDto?.companyId ?? 0,
         name: updateShopDto?.name ?? '',
         cusoftSerial: updateShopDto?.cusoftSerial ?? '',
@@ -112,19 +117,13 @@ export class ShopsService {
       .leftJoinAndSelect('shop.company', 'company')
       .where('shop.id = :id', { id });
 
-    const shop = await queryBuilder.getOne();
-
-    if (!shop) {
-      throw new NotFoundException(`Shop with ID ${id} not found`);
-    }
-
-    return shop;
+    return queryBuilder.getOne();
   }
 
   private async getShop2(shopId?: number): Promise<Shop[] | null> {
 
     let url = `${this.configService.get('externalServices.externalURl') ?? ''}/shops`;
-    if (shopId) {
+    if (shopId || shopId === 0) {
       url += `/${shopId}`
     }
 

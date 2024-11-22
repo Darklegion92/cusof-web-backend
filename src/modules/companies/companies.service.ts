@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dayjs from 'dayjs';
@@ -181,15 +181,10 @@ export class CompaniesService {
       .leftJoinAndSelect('company.typePlans', 'typePlans')
       .leftJoinAndSelect('company.user', 'user')
       .leftJoinAndSelect('company.shops', 'shop')
-      .where('company.document = :document', { document });
+      .where('company.identificationNumber = :document', { document });
 
-    const company = await queryBuilder.getOne();
+    return queryBuilder.getOne();
 
-    if (!company) {
-      throw new NotFoundException(`Company with ID ${document} not found`);
-    }
-
-    return company;
   }
 
   async update(id: number, updateCompanyDto: UpdateCompanyDto, idServer: number, dealerId?: number) {
@@ -355,12 +350,12 @@ export class CompaniesService {
 
   async validateSerial(document: string, cusoftSerial: string) {
 
-    let company: Company | undefined = await this.findDocument(document);
+    let company: Company | null = await this.findDocument(document);
 
     if (!company) {
       const companies: Company[] = await this.getCompany2();
 
-      company = companies.find(c => c.identificationNumber === document);
+      company = companies.find(c => c.identificationNumber == document) ?? null;
 
       if (!company) {
         throw new BadRequestException('Compañia no existe')
@@ -377,8 +372,8 @@ export class CompaniesService {
 
     const dateSerial = dayjs(serialFind.date).add(1, 'y');
 
-    if (dateSerial.isAfter(dayjs())) {
-      throw new UnauthorizedException('Fecha caducada para el serial')
+    if (dateSerial.isBefore(dayjs())) {
+      throw new ForbiddenException('Fecha caducada para el serial')
     }
 
     return company;
