@@ -16,7 +16,7 @@ export class Shop {
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
 
-    @ManyToOne(() => Company, company => company.dealer)
+    @ManyToOne(() => Company, company => company.shops)
     @JoinColumn({ name: 'company_id' })
     company: Company;
 }
