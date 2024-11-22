@@ -129,6 +129,7 @@ export class CompaniesService {
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
       .leftJoinAndSelect('company.user', 'user')
+      .leftJoinAndSelect('company.shops', 'shop')
       .where('type_plan_id <> 0');
 
     if (dealerId) {
@@ -151,6 +152,8 @@ export class CompaniesService {
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .leftJoinAndSelect('company.user', 'user')
+      .leftJoinAndSelect('company.shops', 'shop')
       .where('company.id = :id', { id });
 
     if (dealerId) {
@@ -176,6 +179,8 @@ export class CompaniesService {
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .leftJoinAndSelect('company.user', 'user')
+      .leftJoinAndSelect('company.shops', 'shop')
       .where('company.document = :document', { document });
 
     const company = await queryBuilder.getOne();
@@ -187,17 +192,8 @@ export class CompaniesService {
     return company;
   }
 
-  async update(id: number, { cusoftSerial, ...updateCompanyDto }: UpdateCompanyDto, idServer: number, dealerId?: number) {
+  async update(id: number, updateCompanyDto: UpdateCompanyDto, idServer: number, dealerId?: number) {
     const company = idServer === 1 ? await this.findOne(id, dealerId) : await this.getCompany2(id);
-
-    if (cusoftSerial) {
-
-      const cusoftSerials = cusoftSerial.split(',');
-
-      if (cusoftSerials.length > company.quantityShops) {
-        throw new BadRequestException(`La cantidad de sucurasles no puede superar ${company.quantityShops}`)
-      }
-    }
 
     const updatedCompany = {
       ...updateCompanyDto,
@@ -211,7 +207,6 @@ export class CompaniesService {
         { id: updateCompanyDto.typeLiabilityId } : undefined,
       municipality: updateCompanyDto.municipalityId ?
         { id: updateCompanyDto.municipalityId } : undefined,
-      cusoftSerial
     };
 
     if (idServer === 1) {
@@ -221,7 +216,7 @@ export class CompaniesService {
       });
       return this.findOne(id, dealerId)
     } else {
-      await this.update2(id, { cusoftSerial, ...updateCompanyDto });
+      await this.update2(id, updateCompanyDto);
       return this.getCompany2(id);
     }
 
@@ -372,20 +367,18 @@ export class CompaniesService {
       }
     }
 
+    const cusoftSerials = company.shops.map(s => ({ cusoftSerial: s.cusoftSerial, date: s.createdAt }));
 
-    const cusoftSerials = company.cusoftSerial.split(',');
-
-    const serialFind = cusoftSerials.find((serial) => serial === cusoftSerial);
+    const serialFind = cusoftSerials.find((s) => s.cusoftSerial === cusoftSerial);
 
     if (!serialFind) {
       throw new UnauthorizedException('Serial no registado o incorrecto')
     }
 
-    const dateSerial = dayjs(serialFind.split('-')[1]);
+    const dateSerial = dayjs(serialFind.date).add(1, 'y');
 
     if (dateSerial.isAfter(dayjs())) {
       throw new UnauthorizedException('Fecha caducada para el serial')
-
     }
 
     return company;

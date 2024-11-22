@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Dealer } from '../../dealers/entities/dealer.entity';
 import { TypeDocumentIdentification } from '../../catalog/entities/type-document-identification.entity';
 import { TypeOrganization } from '../../catalog/entities/type-organization.entity';
@@ -7,6 +7,7 @@ import { TypeLiability } from '../../catalog/entities/type-liability.entity';
 import { Municipality } from '../../catalog/entities/municipality.entity';
 import { TypePlans } from './type-plans.entity';
 import { User } from './user.entity';
+import { Shop } from '@/modules/shops/entities/shop.entity';
 
 @Entity('companies')
 export class Company {
@@ -117,16 +118,13 @@ export class Company {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @OneToMany(() => Shop, shop => shop.company)
+  shops: Shop[];
+
   @Column()
   consumption: number;
 
   @Column()
   server: number;
-
-  @Column({ name: 'cusoft_serial' })
-  cusoftSerial: string;
-
-  @Column({ name: 'quantity_shops', default: 1 })
-  quantityShops: number;
 }
 
