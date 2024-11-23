@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as dayjs from 'dayjs';
 import { Company } from './entities/company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -128,6 +129,7 @@ export class CompaniesService {
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
       .leftJoinAndSelect('company.user', 'user')
+      .leftJoinAndSelect('company.shops', 'shop')
       .where('type_plan_id <> 0');
 
     if (dealerId) {
@@ -150,6 +152,8 @@ export class CompaniesService {
       .leftJoinAndSelect('company.municipality', 'municipality')
       .leftJoinAndSelect('company.dealer', 'dealer')
       .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .leftJoinAndSelect('company.user', 'user')
+      .leftJoinAndSelect('company.shops', 'shop')
       .where('company.id = :id', { id });
 
     if (dealerId) {
@@ -165,8 +169,26 @@ export class CompaniesService {
     return company;
   }
 
-  async update(id: number, updateCompanyDto: UpdateCompanyDto, dealerId?: number) {
-    const company = await this.findOne(id, dealerId);
+  async findDocument(document: string) {
+    const queryBuilder = this.companyRepository
+      .createQueryBuilder('company')
+      .leftJoinAndSelect('company.typeDocumentIdentification', 'typeDocumentIdentification')
+      .leftJoinAndSelect('company.typeOrganization', 'typeOrganization')
+      .leftJoinAndSelect('company.typeRegime', 'typeRegime')
+      .leftJoinAndSelect('company.typeLiability', 'typeLiability')
+      .leftJoinAndSelect('company.municipality', 'municipality')
+      .leftJoinAndSelect('company.dealer', 'dealer')
+      .leftJoinAndSelect('company.typePlans', 'typePlans')
+      .leftJoinAndSelect('company.user', 'user')
+      .leftJoinAndSelect('company.shops', 'shop')
+      .where('company.identificationNumber = :document', { document });
+
+    return queryBuilder.getOne();
+
+  }
+
+  async update(id: number, updateCompanyDto: UpdateCompanyDto, idServer: number, dealerId?: number) {
+    const company = idServer === 1 ? await this.findOne(id, dealerId) : await this.getCompany2(id);
 
     const updatedCompany = {
       ...updateCompanyDto,
@@ -182,12 +204,18 @@ export class CompaniesService {
         { id: updateCompanyDto.municipalityId } : undefined,
     };
 
-    await this.companyRepository.save({
-      ...company,
-      ...updatedCompany,
-    });
+    if (idServer === 1) {
+      await this.companyRepository.save({
+        ...company,
+        ...updatedCompany,
+      });
+      return this.findOne(id, dealerId)
+    } else {
+      await this.update2(id, updateCompanyDto);
+      return this.getCompany2(id);
+    }
 
-    return this.findOne(id, dealerId);
+
   }
 
   async addFolios(companyId: number, newFolios: number, server: number, dealerId: number) {
@@ -242,7 +270,6 @@ export class CompaniesService {
 
   }
 
-
   private async findOneTypePlan(id: number) {
 
     const queryBuilder = this.typePlansRepository
@@ -275,5 +302,80 @@ export class CompaniesService {
     }
 
     return []
+  }
+
+  private async getCompany2(companyId?: number) {
+
+    let url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies`;
+    if (companyId) {
+      url += `/${companyId}`
+    }
+
+    const response = await firstValueFrom(
+      this.httpService.get(url, {
+        headers: {
+          'x-api-key': this.configService.get('externalServices.apiKey'),
+        },
+      }),
+    );
+
+    if (response.data) {
+      return response.data;
+    }
+
+    return null
+  }
+
+  private async update2(id: number, updateCompanyDto: UpdateCompanyDto) {
+
+    const url = `${this.configService.get('externalServices.externalURl') ?? ''}/companies/${id}`;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.patch(url, updateCompanyDto, {
+          headers: {
+            'x-api-key': this.configService.get('externalServices.apiKey'),
+          },
+        }),
+      );
+
+
+      if (response.data) {
+        return response.data;
+      }
+    } catch (error) {
+      return error;
+
+    }
+  }
+
+  async validateSerial(document: string, cusoftSerial: string) {
+
+    let company: Company | null = await this.findDocument(document);
+
+    if (!company) {
+      const companies: Company[] = await this.getCompany2();
+
+      company = companies.find(c => c.identificationNumber == document) ?? null;
+
+      if (!company) {
+        throw new BadRequestException('Compañia no existe')
+      }
+    }
+
+    const cusoftSerials = company.shops.map(s => ({ cusoftSerial: s.cusoftSerial, date: s.createdAt }));
+
+    const serialFind = cusoftSerials.find((s) => s.cusoftSerial === cusoftSerial);
+
+    if (!serialFind) {
+      throw new UnauthorizedException('Serial no registado o incorrecto')
+    }
+
+    const dateSerial = dayjs(serialFind.date).add(1, 'y');
+
+    if (dateSerial.isBefore(dayjs())) {
+      throw new ForbiddenException('Fecha caducada para el serial')
+    }
+
+    return company;
   }
 }
